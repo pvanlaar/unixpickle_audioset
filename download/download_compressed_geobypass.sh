@@ -6,13 +6,13 @@ SAMPLE_RATE=48000
 fetch_clip() {
   echo "Fetching $1 ($2 to $3)..."
   outname="$1_$2"
-  if [ -f "${outname}.wav" ]; then
+  if [ -f "${outname}.wav.gz" ]; then
     echo "Already have it."
     return
   fi
 
   youtube-dl https://youtube.com/watch?v=$1 \
-    --quiet --extract-audio --audio-format wav \
+    --quiet --extract-audio --audio-format wav --geo-bypass-country US \
     --output "$outname.%(ext)s"
   if [ $? -eq 0 ]; then
     # If we don't pipe `yes`, ffmpeg seems to steal a
@@ -20,6 +20,7 @@ fetch_clip() {
     yes | ffmpeg -loglevel quiet -i "./$outname.wav" -ar $SAMPLE_RATE \
       -ss "$2" -to "$3" "./${outname}_out.wav"
     mv "./${outname}_out.wav" "./$outname.wav"
+    gzip "./$outname.wav"
   else
     # Give the user a chance to Ctrl+C.
     sleep 1
